@@ -60,8 +60,9 @@
    cd cheata
    ```
 
-2. 의존성을 설치하고 빌드합니다:
+2. 프론트엔드 의존성을 설치하고 빌드합니다:
    ```bash
+   cd cheata
    npm install
    npm run build
    ```
@@ -75,17 +76,22 @@
 
 ### 프론트엔드 (크롬 확장 프로그램)
 
-1. 개발 서버 실행:
+1. 프론트엔드 디렉토리로 이동:
+   ```bash
+   cd cheata
+   ```
+
+2. 개발 서버 실행:
    ```bash
    npm run dev
    ```
 
-2. 코드 린팅:
+3. 코드 린팅:
    ```bash
    npm run lint
    ```
 
-3. 코드 포맷팅:
+4. 코드 포맷팅:
    ```bash
    npm run format
    ```
@@ -95,8 +101,8 @@
 1. Python 가상 환경 설정:
    ```bash
    cd backend
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\\Scripts\\activate
+   python3 -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
@@ -108,7 +114,10 @@
 
 3. 서버 실행:
    ```bash
-   cd backend
+   # 가상환경이 활성화된 상태에서
+   python3 -m app.main
+   
+   # 또는
    uvicorn app.main:app --reload
    ```
 
@@ -120,29 +129,40 @@
 ## 📁 프로젝트 구조
 
 ```
-cheata/
-├── src/                      # 프론트엔드 소스 코드
-│   ├── components/           # React 컴포넌트
-│   ├── api/                  # API 호출 관련 코드
-│   ├── background/           # 백그라운드 스크립트
-│   ├── contents/             # 콘텐츠 스크립트
-│   └── utils/                # 유틸리티 함수
+.
+├── cheata/                   # 프론트엔드 디렉토리
+│   ├── src/                  # 프론트엔드 소스 코드
+│   │   ├── components/       # React 컴포넌트
+│   │   │   ├── AnalysisResult.tsx  # 분석 결과 표시 컴포넌트
+│   │   │   └── TextSelector.tsx    # 텍스트 선택 컴포넌트
+│   │   ├── api/              # API 호출 관련 코드
+│   │   │   └── textAnalysisService.ts  # 텍스트 분석 API 서비스
+│   │   ├── background/       # 백그라운드 스크립트
+│   │   ├── contents/         # 콘텐츠 스크립트 
+│   │   ├── utils/            # 유틸리티 함수
+│   │   └── style.css         # 스타일시트
+│   ├── popup.tsx             # 확장 프로그램 팝업 컴포넌트
+│   ├── package.json          # npm 패키지 정보
+│   ├── postcss.config.js     # PostCSS 설정
+│   └── tailwind.config.js    # TailwindCSS 설정
 │
 ├── backend/                  # 백엔드 API 서버
 │   ├── app/
+│   │   ├── __init__.py
 │   │   ├── main.py           # FastAPI 앱
 │   │   └── ai_service.py     # OpenAI API 연동 서비스
 │   ├── requirements.txt      # Python 의존성
+│   ├── .env                  # 환경 변수 (gitignore에 포함됨)
+│   ├── .env.example          # 환경 변수 예시
 │   └── Dockerfile            # 백엔드 배포용 Dockerfile
 │
 ├── .github/
 │   └── workflows/            # GitHub Actions CI/CD 설정
-│       └── ci-cd.yml
 │
 ├── .eslintrc.js              # ESLint 설정
-├── postcss.config.js         # PostCSS 설정
-├── tailwind.config.js        # TailwindCSS 설정
-├── package.json              # npm 패키지 정보
+├── postcss.config.js         # PostCSS 설정 (루트)
+├── tailwind.config.js        # TailwindCSS 설정 (루트)
+├── package.json              # npm 패키지 정보 (루트)
 └── README.md                 # 프로젝트 설명서
 ```
 
@@ -170,6 +190,14 @@ cheata/
 }
 ```
 
+### 빠른 API 테스트
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"text":"테스트할 가짜 뉴스 내용입니다."}' \
+  http://localhost:8000/analyze
+```
+
 ## 🚀 CI/CD 파이프라인
 
 이 프로젝트는 GitHub Actions를 사용하여 CI/CD 파이프라인을 구성했습니다:
@@ -179,7 +207,13 @@ cheata/
 3. **백엔드 테스트**: Python 백엔드 API 테스트 실행
 4. **패키징**: 메인 브랜치 푸시 시 자동 패키징
 
-GitHub Actions 워크플로우는 `.github/workflows/ci-cd.yml` 파일에 정의되어 있습니다.
+GitHub Actions 워크플로우는 `.github/workflows/` 디렉토리에 정의되어 있습니다.
+
+## ⚠️ 알려진 이슈
+
+- macOS에서 `python` 명령어 대신 `python3`를 사용해야 합니다.
+- Python 가상환경을 활성화한 상태에서 백엔드 서버를 실행해야 합니다.
+- 개발 환경에서는 OpenAI API 키가 없어도 모의(mock) 응답을 제공합니다.
 
 ## 📄 라이센스
 

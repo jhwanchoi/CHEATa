@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import logging
+import traceback
 from dotenv import load_dotenv
 import uvicorn
 
@@ -14,7 +15,7 @@ load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -77,13 +78,48 @@ async def analyze_text(request: AnalysisRequest):
 
         # Process with AI service
         result = await analyze_with_gpt(request.text)
+        
+        logger.debug(f"API result: {result}")
+        
+        # 타입 변환 확인
+        if not isinstance(result, dict):
+            raise ValueError(f"Expected dictionary result, got {type(result)}")
+            
+        # 필요한 키가 모두 있는지 확인
+        required_keys = ["isFake", "confidence", "explanation"]
+        for key in required_keys:
+            if key not in result:
+                raise ValueError(f"Missing required key in result: {key}")
+                
+        # 타입 검사
+        if not isinstance(result["isFake"], bool):
+            result["isFake"] = bool(result["isFake"])
+            
+        if not isinstance(result["confidence"], (int, float)):
+            try:
+                result["confidence"] = float(result["confidence"])
+            except (ValueError, TypeError):
+                result["confidence"] = 50.0
+                
+        if not isinstance(result["explanation"], str):
+            result["explanation"] = str(result["explanation"])
 
-        return result
+        # AnalysisResponse 객체로 반환
+        return AnalysisResponse(
+            isFake=result["isFake"],
+            confidence=result["confidence"],
+            explanation=result["explanation"]
+        )
 
     except Exception as e:
         logger.error(f"Error analyzing text: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error processing text analysis: {str(e)}"
+        logger.error(traceback.format_exc())
+        
+        # 일관된 오류 응답
+        return AnalysisResponse(
+            isFake=False,
+            confidence=50.0,
+            explanation=f"분석 과정에서 오류가 발생했습니다: {str(e)}"
         )
 
 
